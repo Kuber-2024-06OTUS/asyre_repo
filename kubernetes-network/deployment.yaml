@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homework3
+  namespace: homework
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: web-server
+        image: custom-nginx:1.0.0-SNAPSHOT
+        volumeMounts:
+        - name: workdir
+          mountPath: /homework
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "rm /homework/index.html" ]
+      initContainers:
+      - name: busybox-container
+        image: busybox:1.28
+        command:
+        - wget
+        - "-O"
+        - "/init/index.html"
+        - https://otus.ru
+        volumeMounts:
+        - name: workdir
+          mountPath: "/init"
+      volumes:
+      - name: workdir
+        emptyDir: {}
