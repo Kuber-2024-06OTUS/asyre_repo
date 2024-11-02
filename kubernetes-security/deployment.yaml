@@ -17,6 +17,7 @@ spec:
       labels:
         app: nginx
     spec:
+      serviceAccountName: monitoring
       containers:
       - name: web-server
         image: custom-nginx:1.0.0-SNAPSHOT
