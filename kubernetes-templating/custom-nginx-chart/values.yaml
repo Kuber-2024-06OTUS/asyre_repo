@@ -1,12 +1,56 @@
 app:
+  name: deploy-homework6
+  replicasCounts: 3
+  selectorLabel: nginx
+  maxUnavailablePods: 1
   namespace: &default-namespace "homework"
   admin: &cluster-admin "cd"
   monitoring: &cluster-metrics-monitoring "monitoring"
+  podSaName: *cluster-metrics-monitoring
+  volumes:
+    - name: &pvc-volume-name workdir
+      data:
+        persistentVolumeClaim:
+          claimName: &pvc-name pvc-homework6
+    - name: &cm-volume-name cm-volume
+      data:
+        configMap:
+          name: &cm-name cm-homework6
+  containers:
+    -
+      name: web-server
+      create: "true"
+      image: custom-nginx
+      tag: 1.0.0-SNAPSHOT
+      volumeMounts:
+        -
+          name: *pvc-volume-name
+          mountPath: /homework
+        -
+          name: *cm-volume-name
+          mountPath: "/homework/conf"
+      livelinessProbeEnable: "true"
+      lifecycleEnable: "true"
+  initContainers:
+    -
+      name: web-server
+      create: "true"
+      image: custom-nginx
+      tag: 1.0.0-SNAPSHOT
+      volumeMounts:
+        - name: workdir
+          mountPath: /homework
+      command: [ "/bin/sh", "-c" ]
+      args: []
+
+
+
+
 
 configMaps:
   -
     create: true
-    name: cm-homework6
+    name: *cm-name
     namespace: *default-namespace
     data:
       test: "true"
@@ -25,7 +69,7 @@ pvcs:
   -
     create: true
     namespace: *default-namespace
-    name: pvc-homework6
+    name: *pvc-volume-name
     storageClassName: *custom-storage-name
     accessModes:
       -

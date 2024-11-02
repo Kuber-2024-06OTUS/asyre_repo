@@ -1,0 +1,29 @@
+{{ $app := .Values.app}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{$app.name}}
+  namespace: {{$app.name}}
+spec:
+  replicas: {{$app.replicasCounts}}
+  selector:
+    matchLabels:
+      app: {{$app.selectorLabel}}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{$app.maxUnavailablePods}}
+  template:
+    metadata:
+      labels:
+        app: {{$app.selectorLabel}}
+    spec:
+      serviceAccountName: {{$app.podSaName}}
+      containers: {{ range $app.containers }}
+{{ if .create}}
+      - name: {{.name}}
+        image: {{.image}}:{{.tag}}
+        volumeMounts:  {{ range .volumeMounts }}
+          -{{toYaml . | nindent 12 }}{{ end }}
+  {{end}}
+  {{end}}
