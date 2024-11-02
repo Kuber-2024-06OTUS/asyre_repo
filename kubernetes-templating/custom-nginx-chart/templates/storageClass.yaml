@@ -1,0 +1,13 @@
+{{ if .Values.storageclass.create }}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storageclass.name }}
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: {{ .Values.storageclass.provisioner}}
+reclaimPolicy: {{ .Values.storageclass.reclaimPolicy}}
+volumeBindingMode: {{ .Values.storageclass.volumeBindingMode}}
+
+{{ end }}

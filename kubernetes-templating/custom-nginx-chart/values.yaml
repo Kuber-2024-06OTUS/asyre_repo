@@ -1,0 +1,75 @@
+app:
+  namespace: &default-namespace "homework"
+  admin: &cluster-admin "cd"
+  monitoring: &cluster-metrics-monitoring "monitoring"
+
+configMaps:
+  -
+    create: true
+    name: cm-homework6
+    namespace: *default-namespace
+    data:
+      test: "true"
+      greeting: "Hello, world!"
+      homework_number: "4"
+
+
+storageclass:
+  create: true
+  name: &custom-storage-name sc-homework6
+  provisioner: k8s.io/minikube-hostpath
+  reclaimPolicy: Retain
+  volumeBindingMode: Immediate
+
+pvcs:
+  -
+    create: true
+    namespace: *default-namespace
+    name: pvc-homework6
+    storageClassName: *custom-storage-name
+    accessModes:
+      -
+        ReadWriteMany
+    storageCapacity: 1Gi
+
+
+roles:
+  -
+    create: true
+    type: &cluster-role ClusterRole
+    name: &metrics-role "metrics-role"
+    namespace: *default-namespace
+    rules:
+    -
+      nonResourceURLs: ["/metrics"]
+      verbs: ["get"]
+  -
+    create: false
+    type: *cluster-role
+    name: &admin-role admin
+
+serviceAccounts:
+  -
+    create: true
+    name: *cluster-admin
+    createSecret: "true"
+    namespace: *default-namespace
+    bindings:
+      -
+        createBinding: true
+        type: RoleBinding
+        roleKind: *cluster-role
+        roleName: *admin-role
+  -
+    create: true
+    name: *cluster-metrics-monitoring
+    namespace: *default-namespace
+    bindings:
+      -
+        createBinding: true
+        type: ClusterRoleBinding
+        roleKind: *cluster-role
+        roleName: *metrics-role
+
+
+
