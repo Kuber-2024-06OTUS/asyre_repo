@@ -1,4 +1,5 @@
 app:
+  host: &host homework.otus
   name: deploy-homework6
   replicasCounts: 3
   selectorLabel: nginx
@@ -31,18 +32,15 @@ app:
           mountPath: "/homework/conf"
       livelinessProbeEnable: "true"
       lifecycleEnable: "true"
-
   initContainers:
     -
       name: ic-get-metrics
-      create: "true"
-      image: busybox
-      tag: 1.28
+      image: curlimages/curl
+      tag: 8.10.1
       command: [ "/bin/sh", "-c" , 'curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -X GET https://kubernetes.default.svc/metrics -o /init/metrics.html' ]
     - name: ic-get-otus
       image: busybox
       tag: 1.28
-      create: "true"
       command:
         - wget
         - "-O"
@@ -78,7 +76,7 @@ pvcs:
   -
     create: true
     namespace: *default-namespace
-    name: *pvc-volume-name
+    name: *pvc-name
     storageClassName: *custom-storage-name
     accessModes:
       -
@@ -125,4 +123,36 @@ serviceAccounts:
         roleName: *metrics-role
 
 
+
+service:
+  create: "true"
+  name: "homework6"
+  ports:
+    - port: 80
+      targetPort: 8000
+
+ingress:
+  create: "true"
+  name: ingress-homework6
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /index.html
+  ingressClassName: nginx
+  rules:
+    - host: *host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homework3
+                port:
+                  number: 80
+          - path: /homepage
+            pathType: Prefix
+            backend:
+              service:
+                name: homework3
+                port:
+                  number: 80
 

@@ -1,0 +1,17 @@
+{{- if .Values.ingress.create }}
+{{- $ingress := .Values.ingress }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: {{ .Values.app.namespace }}
+  name: {{ $ingress.name}}
+  annotations:
+    {{ toYaml $ingress.annotations }}
+spec:
+  ingressClassName: {{ $ingress.nginx }}
+  rules:
+    {{- range $ingress.rules }}
+     -
+{{ toYaml . | indent 6}}
+    {{- end }}
+{{- end }}

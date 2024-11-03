@@ -1,0 +1,2 @@
+Chart {{ .Chart.Name }} установлен.
+Приложение доступно по адресу http://{{.Values.app.host}}

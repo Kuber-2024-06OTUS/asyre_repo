@@ -3,12 +3,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{$app.name}}
-  namespace: {{$app.name}}
+  namespace: {{$app.namespace}}
 spec:
   replicas: {{$app.replicasCounts}}
   selector:
     matchLabels:
-      app: {{$app.selectorLabel}}
+      {{- include "app.labels" . | indent 6 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{$app.selectorLabel}}
+        {{- include "app.labels" . | indent 8 }}
     spec:
       serviceAccountName: {{$app.podSaName}}
       containers: {{ range $app.containers }}
@@ -26,17 +26,17 @@ spec:
         volumeMounts:  {{ range .volumeMounts }}
           -{{toYaml . | nindent 12 }}{{ end }}
       {{- if .livelinessProbeEnable}}
-        livelinessProbe:
+        readinessProbe:
           httpGet:
             path: /
             port: 8000
-      {{- end}}
+       {{- end}}
        {{- if .lifecycleEnable}}
         lifecycle:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "rm /homework/index.html" ]
-  {{- end}}
+       {{- end}}
 {{- end}}
       initContainers:
 {{- range $app.initContainers }}
@@ -50,7 +50,7 @@ spec:
           {{- end }}
         command:
            {{- range .command }}
-           -{{toYaml . | quote | nindent 12}}
+           - {{toYaml . | quote}}
            {{- end }}
         {{- if .args }}
         args: {{.args}}
