@@ -1,0 +1,65 @@
+{{ $app := .Values.app}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{$app.name}}
+  namespace: {{$app.namespace}}
+spec:
+  replicas: {{$app.replicasCounts}}
+  selector:
+    matchLabels:
+      {{- include "app.labels" . | indent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{$app.maxUnavailablePods}}
+  template:
+    metadata:
+      labels:
+        {{- include "app.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{$app.podSaName}}
+      containers: {{ range $app.containers }}
+{{- if .create}}
+      - name: {{.name}}
+        image: {{.image}}:{{.tag}}
+        volumeMounts:  {{ range .volumeMounts }}
+          -{{toYaml . | nindent 12 }}{{ end }}
+      {{- if .livelinessProbeEnable}}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+       {{- end}}
+       {{- if .lifecycleEnable}}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "rm /homework/index.html" ]
+       {{- end}}
+{{- end}}
+      initContainers:
+{{- range $app.initContainers }}
+      {{- if .create}}
+      -
+        name: {{.name}}
+        image: {{.image}}:{{.tag}}
+        volumeMounts:
+          {{- range .volumeMounts }}
+          -{{toYaml . | nindent 12 }}
+          {{- end }}
+        command:
+           {{- range .command }}
+           - {{toYaml . | quote}}
+           {{- end }}
+        {{- if .args }}
+        args: {{.args}}
+        {{- end}}
+      {{- end}}
+{{- end}}
+      volumes:
+      {{- range $app.volumes }}
+      - name: {{ .name }}
+      {{- toYaml .data | nindent 8 }}
+      {{- end}}
+{{- end}}

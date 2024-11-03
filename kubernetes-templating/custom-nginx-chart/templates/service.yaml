@@ -1,0 +1,15 @@
+{{- if .Values.service.create }}
+{{- $service := .Values.service}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name}}
+  namespace: {{ .Values.app.namespace }}
+spec:
+  ports:
+    {{- range $service.ports }}
+    -{{toYaml . | nindent 6 }}
+    {{- end }}
+  selector:
+    {{- include "app.labels" . | indent 4 }}
+{{- end }}

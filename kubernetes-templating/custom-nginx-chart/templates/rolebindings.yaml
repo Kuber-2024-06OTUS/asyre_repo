@@ -1,0 +1,22 @@
+{{range $acc := .Values.serviceAccounts}}
+{{range .bindings }}
+{{if .createBinding}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ .type}}
+metadata:
+  name: rb-{{$acc.name}}-{{.roleName}}
+  namespace: {{$acc.namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ .roleKind }}
+  name: {{ .roleName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{$acc.name }}
+    namespace: {{$acc.namespace}}
+
+
+{{end}}
+{{end}}
+{{end}}

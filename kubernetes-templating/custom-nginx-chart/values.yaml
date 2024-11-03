@@ -1,0 +1,158 @@
+app:
+  host: &host homework.otus
+  name: deploy-homework6
+  replicasCounts: 3
+  selectorLabel: nginx
+  maxUnavailablePods: 1
+  namespace: &default-namespace "homework"
+  admin: &cluster-admin "cd"
+  monitoring: &cluster-metrics-monitoring "monitoring"
+  podSaName: *cluster-metrics-monitoring
+  volumes:
+    - name: &pvc-volume-name workdir
+      data:
+        persistentVolumeClaim:
+          claimName: &pvc-name pvc-homework6
+    - name: &cm-volume-name cm-volume
+      data:
+        configMap:
+          name: &cm-name cm-homework6
+  containers:
+    -
+      name: web-server
+      create: "true"
+      image: custom-nginx
+      tag: 1.0.0-SNAPSHOT
+      volumeMounts:
+        -
+          name: *pvc-volume-name
+          mountPath: /homework
+        -
+          name: *cm-volume-name
+          mountPath: "/homework/conf"
+      livelinessProbeEnable: "true"
+      lifecycleEnable: "true"
+  initContainers:
+    -
+      name: ic-get-metrics
+      image: curlimages/curl
+      tag: 8.10.1
+      command: [ "/bin/sh", "-c" , 'curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -X GET https://kubernetes.default.svc/metrics -o /init/metrics.html' ]
+    - name: ic-get-otus
+      image: busybox
+      tag: 1.28
+      command:
+        - wget
+        - "-O"
+        - "/init/index.html"
+        - https://otus.ru
+      volumeMounts:
+        - name: *pvc-volume-name
+          mountPath: "/init"
+
+
+
+
+
+configMaps:
+  -
+    create: true
+    name: *cm-name
+    namespace: *default-namespace
+    data:
+      test: "true"
+      greeting: "Hello, world!"
+      homework_number: "4"
+
+
+storageclass:
+  create: true
+  name: &custom-storage-name sc-homework6
+  provisioner: k8s.io/minikube-hostpath
+  reclaimPolicy: Retain
+  volumeBindingMode: Immediate
+
+pvcs:
+  -
+    create: true
+    namespace: *default-namespace
+    name: *pvc-name
+    storageClassName: *custom-storage-name
+    accessModes:
+      -
+        ReadWriteMany
+    storageCapacity: 1Gi
+
+
+roles:
+  -
+    create: true
+    type: &cluster-role ClusterRole
+    name: &metrics-role "metrics-role"
+    namespace: *default-namespace
+    rules:
+    -
+      nonResourceURLs: ["/metrics"]
+      verbs: ["get"]
+  -
+    create: false
+    type: *cluster-role
+    name: &admin-role admin
+
+serviceAccounts:
+  -
+    create: true
+    name: *cluster-admin
+    createSecret: "true"
+    namespace: *default-namespace
+    bindings:
+      -
+        createBinding: true
+        type: RoleBinding
+        roleKind: *cluster-role
+        roleName: *admin-role
+  -
+    create: true
+    name: *cluster-metrics-monitoring
+    namespace: *default-namespace
+    bindings:
+      -
+        createBinding: true
+        type: ClusterRoleBinding
+        roleKind: *cluster-role
+        roleName: *metrics-role
+
+
+
+service:
+  create: "true"
+  name: "homework6"
+  ports:
+    - port: 80
+      targetPort: 8000
+
+ingress:
+  create: "true"
+  name: ingress-homework6
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /index.html
+  ingressClassName: nginx
+  rules:
+    - host: *host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homework3
+                port:
+                  number: 80
+          - path: /homepage
+            pathType: Prefix
+            backend:
+              service:
+                name: homework3
+                port:
+                  number: 80
+

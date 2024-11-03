@@ -37,8 +37,7 @@ spec:
       initContainers:
       - name: busybox-container
         image: busybox:1.28
-        command: [ "/bin/sh", "-c" ]
-        args: [ 'curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -X GET https://kubernetes.default.svc/metrics -o /init/metrics.html' ]
+        command: [ '/bin/sh', '-c' , 'curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -X GET https://kubernetes.default.svc/metrics -o /init/metrics.html' ]
       - name: busybox-container
         image: busybox:1.28
         command:

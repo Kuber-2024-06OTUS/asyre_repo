@@ -1,0 +1,9 @@
+image:
+  tag: "3.5.2"
+broker:
+  replicaCount: 1
+listeners:
+  client:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT
