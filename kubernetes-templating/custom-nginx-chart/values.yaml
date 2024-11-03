@@ -31,17 +31,26 @@ app:
           mountPath: "/homework/conf"
       livelinessProbeEnable: "true"
       lifecycleEnable: "true"
+
   initContainers:
     -
-      name: web-server
+      name: ic-get-metrics
       create: "true"
-      image: custom-nginx
-      tag: 1.0.0-SNAPSHOT
+      image: busybox
+      tag: 1.28
+      command: [ "/bin/sh", "-c" , 'curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -X GET https://kubernetes.default.svc/metrics -o /init/metrics.html' ]
+    - name: ic-get-otus
+      image: busybox
+      tag: 1.28
+      create: "true"
+      command:
+        - wget
+        - "-O"
+        - "/init/index.html"
+        - https://otus.ru
       volumeMounts:
-        - name: workdir
-          mountPath: /homework
-      command: [ "/bin/sh", "-c" ]
-      args: []
+        - name: *pvc-volume-name
+          mountPath: "/init"
 
 
 
