@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-homework5
+  namespace: homework
+data:
+  test: "true"
+  greeting: "Hello, world!"
+  homework_number: "4"
