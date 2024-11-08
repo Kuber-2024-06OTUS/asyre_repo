@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-homework7
+  namespace: homework
+spec:
+  selector:
+    matchLabels:
+      app: homework7
+  template:
+    metadata:
+      labels:
+        app: homework7
+    spec:
+      serviceAccountName: sa-min-homework7
+      containers:
+        - name: mysql-operator
+          image: roflmaoinmysoul/mysql-operator:1.0.0

@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cr-min-homework7
+rules:
+  - apiGroups: [""]
+    resources: ["events", "namespaces", "persistentvolumeclaims", "persistentvolumes", "pods", "services"]
+    verbs:  ["list", "watch", "get", "create", "update", "delete", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/status"]
+    verbs:  ["list", "watch", "get", "create", "update", "delete", "patch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs:  ["list", "watch", "get", "create", "update", "delete", "patch"]
+  - apiGroups: ["otus.homework"]
+    resources: ["mysqls"]
+    verbs: ["list", "watch", "get", "create", "update", "delete", "patch"]
